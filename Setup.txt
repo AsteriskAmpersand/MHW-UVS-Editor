@@ -1,0 +1,8 @@
+py -m venv env
+.\env\Scripts\activate
+pip install PyQt5
+pip install PyInstaller
+
+pip install construct
+pyinstaller UVSManager.py --onefile
+pyInstaller UVSManager.spec
