@@ -44,7 +44,6 @@ class UVSManager(QtWidgets.QMainWindow):
                     self.marshall(uvs_data)
                     self.currentFile = uvs
             except:
-                raise
                 return
             self.currentFile = uvs
     

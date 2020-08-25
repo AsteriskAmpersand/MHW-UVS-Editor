@@ -18,4 +18,7 @@ class UVGroup(QListWidgetItem):
     def indexize(self,pathdata):
         pathlist = [p for p,t in pathdata]
         self.indices = [pathlist.index(path) for path in self.paths]
+
+    def clone(self):
+        return UVGroup(self.text(), self.framedata,self.paths,self.types,self.dynamic)
         
