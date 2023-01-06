@@ -20,16 +20,16 @@ from pathlib import Path
 class ImageDialog(QDialog):
     def __init__(self, *args):
         super().__init__(*args)
-        
+
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         self.setWindowTitle("Add File")
         self.animatable = True
-        
+
         self.connect()
         self.setModal(True)
         #self.show()
-        
+
     def populate(self,group):
         self.animatable = False
         self.framedata = group.framedata
@@ -41,10 +41,10 @@ class ImageDialog(QDialog):
             target.setCurrentIndex(typing-1)
         self.ui.Unkn3.setValue(group.dynamic)
         self.disable()
-    
+
     def disable(self):
         self.ui.Animated.setEnabled(False)
-    
+
     def connect(self):
         self.ui.OK.pressed.connect(self.accept)
         self.ui.Cancel.pressed.connect(self.reject)
@@ -56,12 +56,12 @@ class ImageDialog(QDialog):
         animData = self.ui.AnimationData
         animData.setEnabled(False)
         self.ui.Animated.clicked.connect(lambda: animData.setEnabled(not animData.isEnabled()))
-        
+
     def openCSV(self):
         csvf = QFileDialog.getOpenFileName(self, "Open CSV", "", "Comma Separated Values (*.csv)")[0]
         if csvf:
             self.ui.CSV.setText(csvf)
-    
+
     def metaOpenFile(self,index):
         def openFile():
             tex = QFileDialog.getOpenFileName(self, "Open Tex", "", "MHW Tex File (*.tex)")[0]
@@ -75,12 +75,12 @@ class ImageDialog(QDialog):
                         pass
                 getattr(self.ui,"Path%d"%index).setText(tex)
         return openFile
-    
+
     def openFile(self):
         tex = QFileDialog.getOpenFileName(self, "Open Tex", "", "MHW Tex File (*.tex)")[0]
         if tex:
             self.ui.Path.setText(tex)
-    
+
     def compileFrames(self):
         if self.ui.Animated.isChecked():
             s = self.ui
@@ -109,10 +109,10 @@ class ImageDialog(QDialog):
         else:
             framedata = [((0,0),(1,1))]
         return framedata
-    
+
     def fetchFrames(self):
         return self.framedata
-    
+
     def compile(self):
         if self.animatable:
             framedata = self.compileFrames()
@@ -128,7 +128,8 @@ class ImageDialog(QDialog):
         dynamic = self.ui.Unkn3.value()
         litem = UVGroup(name,framedata,tpaths,ttypes,dynamic)
         return litem
-    
+
     def parseCSV(self,path):
         with open(path,"r") as inf:
-            return [tuple(line.replace("\n","").replace("\r","").split(",")) for line in inf]
+            raw_co = [tuple(map(float,line.replace("\n","").replace("\r","").split(","))) for line in inf]
+            return list(zip(raw_co[::2],raw_co[1::2]))

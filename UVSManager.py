@@ -27,14 +27,14 @@ class UVSManager(QtWidgets.QMainWindow):
         elif __file__:
             application_path = os.path.dirname(__file__)
         self.setWindowIcon(QIcon(application_path+r"\resources\DodoSama.png"))
-        
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowTitle("UltraViolet - UVS Editor")
         self.connect()
-        self.currentFile = None        
+        self.currentFile = None
         self.show()
-        
+
     def open(self):
         uvs = QFileDialog.getOpenFileName(self, "Open UVS", "", "MHW UVS File (*.uvs)")[0]
         if uvs:
@@ -46,7 +46,7 @@ class UVSManager(QtWidgets.QMainWindow):
             except:
                 return
             self.currentFile = uvs
-    
+
     def marshall(self,uvs):
         self.ui.pathWidget.clear()
         for group in uvs.Groups:
@@ -59,7 +59,7 @@ class UVSManager(QtWidgets.QMainWindow):
                             for frame in group.frameData]
             litem = UVGroup('\n'.join(tpaths),framedata,tpaths,ttypes,dynamic)
             self.ui.pathWidget.addItem(litem)
-    
+
     def connect(self):
         widget = self.ui.pathWidget
         self.ui.actionNew.triggered.connect(self.new)
@@ -67,42 +67,43 @@ class UVSManager(QtWidgets.QMainWindow):
         self.ui.actionSave.triggered.connect(self.save)
         self.ui.actionSave_As.triggered.connect(self.saveAs)
         self.ui.browse.pressed.connect(self.browseChunk)
-        
+
     def browseChunk(self):
         chunk = QFileDialog.getExistingDirectory(self, "Open Chunk Root", "")
         if chunk:
             self.ui.root.setText(chunk)
-    
+
     def hotkeys(self):
         #delete
         self.delete = QShortcut(QKeySequence("Del"), self)
         self.delete.activated.connect(self.ui.pathWidget.delete)
-    
+
     def new(self):
         self.currentFile = None
         self.ui.pathWidget.clear()
-    
+
     def save(self):
         if self.currentFile is None:
             self.saveAs()
         else:
             self.__save__(self.currentFile)
             self.currentFile = self.currentFile
-            
+
     def saveAs(self):
         saveFile =  QFileDialog.getSaveFileName(self, "Save UVS", "", "MHW UVS File (*.uvs)")[0]
         if saveFile:
-            self.__save__(saveFile)            
-        
-    def __save__(self,path): 
+            self.__save__(saveFile)
+
+    def __save__(self,path):
         serialData = self.serialize()
         with open(path,"wb") as inf:
             inf.write(serialData)
 
     def serialize(self):
         groups = self.ui.pathWidget
-        paths = list(dict.fromkeys([(path,typing) 
-                                        for group in self.ui.pathWidget 
+        groups = sum([group.virtual().split() for group in groups],[])
+        paths = list(dict.fromkeys([(path,typing)
+                                        for group in self.ui.pathWidget
                                         for path,typing in zip(group.paths,group.types)
                                     ]))
         for group in groups:
@@ -116,15 +117,15 @@ class UVSManager(QtWidgets.QMainWindow):
         GroupHeaders = [{"frameDataOffset":fdOffset,"frameCount":fCount,
                          "frameIndexOffset":fiOffset,"frameIndexCount":fCount,
                          "dataOffset":dOffset,"mapCount":len(group.types),
-                         "unkn32_0":32,"unkn32_1":32,"unkn3":group.dynamic} 
-                        for group,fdOffset,fCount,fiOffset,dOffset in 
+                         "unkn32_0":32,"unkn32_1":32,"unkn3":group.dynamic}
+                        for group,fdOffset,fCount,fiOffset,dOffset in
                         zip(groups,frameDataOffsets,frameDataCounts,indexOffsets,mapIndexOffset)]
         groupPad = lambda x: x + [0]*((-len(x))%4)
         GroupBlocks = [(  [{"uv0":uv0,"uv1":uv1,"unkn":[.5,.5,0,0]} for uv0,uv1 in group.framedata],
                           {"frameIndices":list(range(len(group.framedata)))},
-                          {"mapIndices":groupPad(group.indices) if len(group.framedata) else []})                        
+                          {"mapIndices":groupPad(group.indices) if len(group.framedata) else []})
                         for group in groups]
-        StringBlocks = [{"blank":0,"stringOffset":offset,"type":typing} 
+        StringBlocks = [{"blank":0,"stringOffset":offset,"type":typing}
                             for offset,(string,typing) in zip(stringOffsets,paths)]
         StringData = [{"string":string} for string,typing in paths]
         binaryUVS = UVSCompile(Header,GroupHeaders,GroupBlocks,StringBlocks,StringData)
@@ -166,10 +167,10 @@ if "__main__" in __name__:
     args = app.arguments()[1:]
     splash = SplashScreen()
     response = splash.exec()
-    
+
     if not response:
         sys.exit(app.exec_())
-        
+
     #app = QApplication(sys.argv)
     setStyle(app)
     window = UVSManager()

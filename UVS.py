@@ -8,7 +8,7 @@ import construct as C
 
 Header = C.Struct(
         "uvsSignature" / C.Const(b"UVS\x00"),
-        "ibSignature" / C.Const([0,7,18,22] ,C.Byte[4]), 
+        "ibSignature" / C.Const([0,7,18,22] ,C.Byte[4]),
         "groupOffset" / C.Int64sl,
         "groupCount" / C.Int64sl,
         "stringOffset" / C.Int64sl,
@@ -18,7 +18,7 @@ Header = C.Struct(
 Primary = C.Struct(
         "uv0" / C.Float32l[2],
         "uv1" / C.Float32l[2],
-        "unkn" / C.Float32l[4],       
+        "unkn" / C.Float32l[4],
         )
 defaultPrimary = {
         "unkn" : [0.5,0.5,0,0]
@@ -72,7 +72,7 @@ StringBody = C.Struct(
 StringData = C.Struct(
         "blank" /  C.Int64sl,
         "stringOffset" /  C.Int64sl,
-        "type" /  C.Int32sl,        
+        "type" /  C.Int32sl,
         "string" / C.Pointer(C.this.stringOffset,C.CString("utf-8")),
         "padding" / C.Optional(C.Const(0,C.Int32sl))
         )
@@ -80,7 +80,7 @@ StringData = C.Struct(
 UVSFile = C.Struct(
         "Header" / Header,
         "Groups" / C.Pointer(C.this.Header.groupOffset,Group[C.this.Header.groupCount]),
-        "Strings" / C.Pointer(C.this.Header.stringOffset,StringData[C.this.Header.stringCount])        
+        "Strings" / C.Pointer(C.this.Header.stringOffset,StringData[C.this.Header.stringCount])
         )
 
 def pad(size,offset):
@@ -128,7 +128,7 @@ def compileSpacings(groups, strings):
     return (groupOffset,groupCount,stringBlockOffset,stringCount,\
             frameDataOffsets,frameDataCounts,indexOffsets,frameDataCounts,dataROffsets,\
             stringOffsets)
-    
+
 def UVSCompile(header,groupHeaders,groupBlocks,stringBlocks,stringData):
     #bpad
     data = b""
@@ -144,7 +144,7 @@ def UVSCompile(header,groupHeaders,groupBlocks,stringBlocks,stringData):
     for ix,block in enumerate(stringBlocks):
         data += StringHead.build(block)
         if ix != len(stringBlocks)-1:
-            data += b"\x00"*4    
+            data += b"\x00"*4
     for ix,string in enumerate(stringData):
         data += StringBody.build(string)
         if ix != len(stringData)-1:
@@ -156,6 +156,7 @@ def UVSCompile(header,groupHeaders,groupBlocks,stringBlocks,stringData):
 #Strings: StringOffset
 
 if __name__ in "__main__":
+    """
     from UVGroup import UVGroup
     path = "wp\god_lies_here\shrek"
     groups = []
@@ -183,15 +184,15 @@ if __name__ in "__main__":
     _GroupHeaders = [{"frameDataOffset":fdOffset,"frameCount":fCount,
                      "frameIndexOffset":fiOffset,"frameIndexCount":fCount,
                      "dataOffset":dOffset,"mapCount":len(group.types),
-                     "unkn32_0":32,"unkn32_1":32,"unkn3":group.dynamic} 
-                    for group,fdOffset,fCount,fiOffset,dOffset in 
+                     "unkn32_0":32,"unkn32_1":32,"unkn3":group.dynamic}
+                    for group,fdOffset,fCount,fiOffset,dOffset in
                     zip(groups,frameDataOffsets,frameDataCounts,indexOffsets,mapIndexOffset)]
     groupPad = lambda x: x + [0]*((-len(x))%4)
     _GroupBlocks = [(  [{"uv0":uv0,"uv1":uv1,"unkn":[.5,.5,0,0]} for uv0,uv1 in group.framedata],
                       {"frameIndices":list(range(len(group.framedata)))},
-                      {"mapIndices":groupPad(group.indices) if len(group.framedata) else []})                        
+                      {"mapIndices":groupPad(group.indices) if len(group.framedata) else []})
                     for group in groups]
-    _StringBlocks = [{"blank":0,"stringOffset":offset,"type":typing} 
+    _StringBlocks = [{"blank":0,"stringOffset":offset,"type":typing}
                         for offset,(string,typing) in zip(stringOffsets,paths)]
     _StringData = [{"string":string} for string,typing in paths]
     binaryUVS = UVSCompile(_Header,_GroupHeaders,_GroupBlocks,_StringBlocks,_StringData)
@@ -199,7 +200,7 @@ if __name__ in "__main__":
         inf.write(binaryUVS)
 
 
-"""
+    """
     errors = []
     op = print
     #print = errors.append
@@ -211,9 +212,15 @@ if __name__ in "__main__":
         except:
             print("%s Failed to Read"%inf)
             raise
-        for ex, group in enumerate(uvf.Groups):    
+        for ex, group in enumerate(uvf.Groups):
             if group.frameIndexCount > 1:
                 nonPrim.append((group.frameIndexCount,inf))
+        for stringData in uvf.Strings:
+            if stringData.type != 1:
+                print(inf)
+                print("Non Standard Type: %d: %s - %s"%(stringData.type,stringData.string,inf))
+                #raise
+    """
     for i in sorted(nonPrim):
         print (i)
 
@@ -238,14 +245,14 @@ if __name__ in "__main__":
             if stringData.blank != 0:
                 raise
             if stringData.type != 1:
-                #print(inf)
+                print(inf)
                 print("Non Standard Type: %d: %s - %s"%(stringData.type,stringData.string,inf))
                 #raise
-    
+
     print = op
     for err in sorted(errors):
         print(err)
-"""
+    """
         #else:
         #    print(str(inf))
         #for frame in group.frameData:
@@ -254,7 +261,7 @@ if __name__ in "__main__":
         #        raise
         #if group.primaryCount == 0:
         #    print("No Primary: %s"%str(inf))
-        
+
         #if group.unkn0 != 1:
         #    print("UNKN MISMATCH 0: %s: %d"%(str(inf),group.unkn0))
         #if group.unkn1 != 32:
@@ -263,7 +270,7 @@ if __name__ in "__main__":
         #    print("UNKN MISMATCH 2: %s: %f"%(str(inf),group.unkn2))
         #if group.unkn3 != 1:
         #    print("UNKN MISMATCH 3: %s: %d"%(str(inf),group.unkn3))
-    
+
     #for string in uvf.Strings[:]:
     #    if string.one != 1:
     #        print("%s has Non 1 String One %d"%(inf,string.one))

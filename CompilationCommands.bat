@@ -1,2 +1,3 @@
+cd /d "D:\Games SSD\MHW UVS Editor"
 call .\env\Scripts\activate
-call pyinstaller -F --clean UVSManager.spec
+call pyinstaller --clean UVSManager.spec
