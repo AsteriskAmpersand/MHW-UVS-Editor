@@ -104,7 +104,9 @@ class ImageDialog(QDialog):
                 iSg = udlr + dulr + lrud + lrdu + -1*(udrl + durl + rlud + rldu)
                 jSg = udlr + udrl + lrud + rldu + -1*(dulr + durl + rlud + lrdu)
                 signum = lambda uv: (iSg*uv[0],jSg*uv[1])
-                frameCount = max(0,min(len(framedata),self.ui.FrameCount.value()))
+                count = self.ui.FrameCount.value()
+                count = count if count else len(framedata)
+                frameCount = max(0,min(len(framedata),count))
                 framedata = list(sorted(framedata,key = lambda p: f(signum(p[0])) ))[:frameCount]
         else:
             framedata = [((0,0),(1,1))]
